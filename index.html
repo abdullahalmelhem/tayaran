@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ساحة الطيران - تقرير خدمة الطائرة</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root{
+      --bg0:#041c1a;
+      --bg1:#062a26;
+      --line: rgba(255,255,255,.10);
+      --gold:#b9a779;
+      --gold2:#988561;
+      --txt:#e9e6dc;
+      --muted:#8fb3ad;
+    }
+
+    body{
+      font-family:'Tajawal',system-ui,-apple-system,Segoe UI,Arial;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(185,167,121,.12), transparent 55%),
+        radial-gradient(900px 500px at 80% 20%, rgba(66,129,119,.14), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      color: var(--txt);
+      min-height:100vh;
+    }
+
+    .glass{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(7,47,42,.92), rgba(6,42,38,.92));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.35);
+    }
+
+    .section{
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(8,58,51,.55), rgba(7,47,42,.25));
+    }
+
+    .label{
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 6px;
+      display:block;
+    }
+
+    .inp, .ta{
+      width:100%;
+      background: rgba(4,28,26,.55);
+      border: 1px solid rgba(143,179,173,.28);
+      color: var(--txt);
+      border-radius: 12px;
+      padding: 12px 12px;
+      outline:none;
+      transition: .15s;
+    }
+    .inp:focus, .ta:focus{
+      border-color: rgba(185,167,121,.65);
+      box-shadow: 0 0 0 3px rgba(185,167,121,.14);
+    }
+    .ta{ min-height: 96px; resize: vertical; }
+
+    .chip{
+      border: 1px solid rgba(185,167,121,.35);
+      background: rgba(185,167,121,.08);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    .btn{
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      transition: .15s;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      user-select:none;
+    }
+    .btn-gold{
+      background: linear-gradient(180deg, var(--gold), var(--gold2));
+      color: #06201d;
+      box-shadow: 0 10px 24px rgba(185,167,121,.18);
+    }
+    .btn-gold:hover{ filter: brightness(1.03); transform: translateY(-1px); }
+
+    .btn-dark{
+      background: rgba(4,28,26,.55);
+      color: var(--gold);
+      border: 1px solid rgba(185,167,121,.45);
+    }
+    .btn-dark:hover{ background: rgba(0,0,0,.25); }
+
+    .btn-soft{
+      background: rgba(8,58,51,.40);
+      border: 1px solid rgba(143,179,173,.28);
+      color: var(--txt);
+    }
+    .btn-soft:hover{ background: rgba(8,58,51,.55); }
+
+    .mini{ color: var(--muted); font-size: 12px; }
+
+    .divider{
+      height:1px;
+      background: linear-gradient(90deg, transparent, rgba(185,167,121,.30), transparent);
+    }
+
+    /* ========= Custom Dropdown ========= */
+    .select-wrap{ position:relative; }
+
+    .select-btn{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding-left: 52px;
+      cursor:pointer;
+    }
+    .select-btn .left-icons{
+      position:absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      pointer-events:none;
+      opacity:.98;
+    }
+    .select-btn .plane{
+      color: rgba(185,167,121,.95);
+      font-size: 14px;
+      transform: translateY(-1px);
+    }
+    .select-btn .chev{
+      width: 10px;
+      height: 10px;
+      border-left: 2px solid rgba(185,167,121,.95);
+      border-bottom: 2px solid rgba(185,167,121,.95);
+      transform: rotate(-45deg);
+      transition: .15s;
+      opacity:.95;
+    }
+    .select-wrap.open .select-btn{
+      border-color: rgba(185,167,121,.70);
+      box-shadow: 0 0 0 3px rgba(185,167,121,.14);
+      background: rgba(4,28,26,.62);
+    }
+    .select-wrap.open .select-btn .chev{ transform: rotate(135deg); }
+
+    .select-menu{
+      position:absolute;
+      z-index: 50;
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(185,167,121,.22);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      backdrop-filter: blur(12px);
+      box-shadow: 0 18px 55px rgba(0,0,0,.45);
+      animation: pop .12s ease-out;
+    }
+    @keyframes pop{
+      from{ opacity:0; transform: translateY(-4px) scale(.99); }
+      to{ opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    .select-search{
+      border-radius: 0;
+      border: 0;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(4,28,26,.45);
+      padding: 12px 14px;
+    }
+    .select-search:focus{
+      box-shadow:none;
+      border-bottom: 1px solid rgba(185,167,121,.45);
+    }
+
+    .select-list{
+      max-height: 260px;
+      overflow:auto;
+      padding: 8px;
+    }
+    .select-item{
+      width:100%;
+      text-align:right;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: rgba(4,28,26,.25);
+      color: var(--txt);
+      font-weight: 800;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      transition: .12s;
+      cursor:pointer;
+      user-select:none;
+    }
+    .select-item:hover{
+      background: rgba(185,167,121,.12);
+      border-color: rgba(185,167,121,.28);
+    }
+    .select-item .tick{
+      opacity:0;
+      color: rgba(185,167,121,.95);
+      font-weight: 900;
+    }
+    .select-item.selected{
+      background: linear-gradient(180deg, rgba(185,167,121,.18), rgba(185,167,121,.08));
+      border-color: rgba(185,167,121,.35);
+    }
+    .select-item.selected .tick{ opacity:1; }
+
+    .select-empty{
+      padding: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+    }
+
+    .hidden{ display:none !important; }
+
+    /* ========= Services – Pro Cards ========= */
+    .svcGrid{
+      display:grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (min-width: 640px){
+      .svcGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1024px){
+      .svcGrid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    .svcCard{
+      border: 1px solid rgba(143,179,173,.26);
+      background: linear-gradient(180deg, rgba(4,28,26,.50), rgba(4,28,26,.28));
+      border-radius: 16px;
+      padding: 12px 12px;
+      transition: .12s;
+      position: relative;
+      overflow: hidden;
+    }
+    .svcCard::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: radial-gradient(400px 120px at 20% 0%, rgba(185,167,121,.12), transparent 60%);
+      opacity:.85;
+      pointer-events:none;
+    }
+    .svcCard:hover{ border-color: rgba(185,167,121,.35); transform: translateY(-1px); }
+
+    .svcHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .svcName{
+      font-weight: 900;
+      color: var(--txt);
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .svcIcon{
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border: 1px solid rgba(185,167,121,.28);
+      background: rgba(185,167,121,.08);
+      color: rgba(185,167,121,.95);
+      font-size: 14px;
+      flex: 0 0 auto;
+    }
+
+    .svcToggle{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      position: relative;
+      z-index: 1;
+    }
+    .svcToggle input[type="checkbox"]{
+      width: 20px;
+      height: 20px;
+      accent-color: var(--gold);
+    }
+
+    .svcQtyRow{
+      margin-top: 10px;
+      position: relative;
+      z-index: 1;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      justify-content:space-between;
+    }
+    .svcQtyRow .mini{ margin:0; }
+    .svcQty{
+      width: 110px;
+      text-align:center;
+      padding: 10px 10px;
+      border-radius: 14px;
+      background: rgba(4,28,26,.55);
+      border: 1px solid rgba(143,179,173,.28);
+      color: var(--txt);
+      outline:none;
+      transition:.15s;
+    }
+    .svcQty:focus{
+      border-color: rgba(185,167,121,.65);
+      box-shadow: 0 0 0 3px rgba(185,167,121,.14);
+    }
+
+    @media print{
+      body{
+        background: #062a26 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .no-print{ display:none !important; }
+      .card{ box-shadow:none !important; }
+    }
+
+    /* ===== القالب الاحترافي للتصدير كـ PDF ===== */
+    #pdfRoot{
+      position: absolute;
+      top: 0;
+      right: 0; 
+      width: 1100px;
+      direction: rtl;
+      font-family: 'Tajawal', Arial, sans-serif;
+      color: #000000;
+      z-index: -9999;
+      opacity: 0.01;
+      pointer-events: none;
+    }
+    .pdfPage{
+      background: #ffffff;
+      padding: 10px;
+    }
+    .pdfHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 16px;
+      border-radius: 14px;
+      padding: 18px 20px;
+      background: #0b2f2a;
+      color:#fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      page-break-inside: avoid;
+    }
+    .pdfHeader h1{
+      margin:0;
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+    .pdfHeader .sub{
+      margin-top: 6px;
+      font-size: 14px;
+      opacity: .9;
+    }
+    .pdfBadge{
+      display:inline-block;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.3);
+      color: #ffffff;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    
+    .pdfGrid{
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    .pdfCard{
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      overflow:hidden;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      background: #ffffff;
+    }
+    .pdfCardTitle{
+      background: #f1f5f9;
+      color:#0f172a;
+      padding: 14px 18px;
+      font-weight: 900;
+      font-size: 18px;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    .pdfCardBody{
+      padding: 14px 18px;
+    }
+    .pdfTable{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    .pdfTable tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .pdfTable td{
+      border: 1px solid #cbd5e1;
+      padding: 12px 14px;
+      vertical-align: middle;
+    }
+    .k{
+      background: #f8fafc;
+      color:#334155;
+      font-weight: 800;
+      white-space: nowrap;
+      font-size: 14px;
+    }
+    .v{
+      color:#000000;
+      font-weight: 900;
+      font-size: 16px;
+    }
+    .pdfChips{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .pdfChip{
+      border: 1px solid #94a3b8;
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 14px;
+      direction: rtl; 
+    }
+    .pdfNotes{
+      white-space: pre-wrap;
+      font-size: 15px;
+      font-weight: 800;
+      color: #000000;
+      line-height: 1.6;
+      border: 1px solid #cbd5e1;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f8fafc;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body class="p-4 sm:p-6">
+  <div class="mx-auto max-w-6xl card overflow-hidden">
+    <div class="p-5 sm:p-6 glass no-print">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <img src="logo.png" onerror="this.style.display='none'" class="w-12 h-12 object-contain">
+          <div>
+            <div class="text-[11px] text-[color:var(--gold)] font-extrabold tracking-wide">الجمهورية العربية السورية</div>
+            <div class="text-base sm:text-lg font-extrabold">ساحة الطيران - نموذج تقرير خدمة الطائرة</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button class="btn btn-soft" onclick="buildPreview()">إنشاء المعاينة</button>
+          <button id="exportWordBtn" class="btn btn-dark" onclick="exportDocxNative()">تصدير ومشاركة Word</button>
+          <button id="exportPdfBtn" class="btn btn-gold" onclick="exportPdfPro()">تصدير ومشاركة PDF</button>
+          <button class="btn btn-gold" onclick="window.print()">طباعة / PDF</button>
+          <button class="btn btn-dark" onclick="resetForm()">تفريغ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4 sm:p-6">
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div class="space-y-4">
+          <div class="section p-4 sm:p-5">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="text-[color:var(--gold)] font-extrabold">بيانات الرحلة</div>
+              <span class="mini">املأ البيانات ثم اضغط “إنشاء المعاينة”</span>
+            </div>
+            <div class="divider mb-4"></div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="label">تقرير العنصر (اسم كاتب التقرير)</label>
+                <input id="rep_writer" class="inp" type="text" placeholder="مثال: أحمد محمد">
+              </div>
+
+              <div>
+                <label class="label">نوع الطائرة</label>
+
+                <input id="aircraft_type" type="hidden" value="">
+
+                <div id="aircraftSelect" class="select-wrap">
+                  <button id="aircraft_btn" type="button" class="inp select-btn" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="aircraft_btn_text">اختر نوع الطائرة...</span>
+                    <span class="left-icons">
+                      <span class="plane">✈</span>
+                      <span class="chev"></span>
+                    </span>
+                  </button>
+
+                  <div id="aircraft_menu" class="select-menu hidden" role="listbox" aria-label="قائمة نوع الطائرة">
+                    <input id="aircraft_search" class="inp select-search" type="text" placeholder="بحث سريع...">
+                    <div id="aircraft_list" class="select-list"></div>
+                    <div id="aircraft_empty" class="select-empty hidden">لا يوجد نتائج</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 sm:col-span-2">
+                <div>
+                  <label class="label">توقيت الوصول (تاريخ)</label>
+                  <input id="arr_date" class="inp" type="date">
+                </div>
+                <div>
+                  <label class="label">توقيت الوصول (وقت)</label>
+                  <input id="arr_time" class="inp" type="time">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 sm:col-span-2">
+                <div>
+                  <label class="label">توقيت المغادرة (تاريخ)</label>
+                  <input id="dep_date" class="inp" type="date">
+                </div>
+                <div>
+                  <label class="label">توقيت المغادرة (وقت)</label>
+                  <input id="dep_time" class="inp" type="time">
+                </div>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="label">مهبط الطائرة</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="stand_num" class="inp" type="text" placeholder="رقم الفنكر">
+                  <input id="gate_num" class="inp" type="text" placeholder="رقم البوابة">
+                </div>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="label">رقم الرحلة</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="flight_arr" class="inp" type="text" placeholder="قدوم">
+                  <input id="flight_dep" class="inp" type="text" placeholder="مغادرة">
+                </div>
+              </div>
+
+              <div>
+                <label class="label">عدد الركاب</label>
+                <input id="pax_count" class="inp" type="number" min="0" placeholder="0">
+              </div>
+
+              <div>
+                <label class="label">وفود (عدد)</label>
+                <input id="delegations_count" class="inp" type="number" min="0" placeholder="0">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="label">ركاب VIP (عدد)</label>
+                <input id="vip_pax" class="inp" type="number" min="0" placeholder="0">
+              </div>
+            </div>
+          </div>
+
+          <div class="section p-4 sm:p-5">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="text-[color:var(--gold)] font-extrabold">الطواقم الموظفين + المفقودات</div>
+              <span class="mini">يمكن إضافة أكثر من اسم لكل بند</span>
+            </div>
+            <div class="divider mb-4"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <div class="glass rounded-2xl p-3 border border-[color:var(--line)]">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="text-[color:var(--gold)] font-bold">موظف الحركة</div>
+                  <button class="btn btn-dark !py-2 !px-3 !rounded-xl text-xs" type="button" onclick="addPerson('movement_staff')">+ إضافة</button>
+                </div>
+                <div id="movement_staff" class="space-y-2"></div>
+              </div>
+
+              <div class="glass rounded-2xl p-3 border border-[color:var(--line)]">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="text-[color:var(--gold)] font-bold">عمال التحميل</div>
+                  <button class="btn btn-dark !py-2 !px-3 !rounded-xl text-xs" type="button" onclick="addPerson('loading_staff')">+ إضافة</button>
+                </div>
+                <div id="loading_staff" class="space-y-2"></div>
+              </div>
+
+              <div class="glass rounded-2xl p-3 border border-[color:var(--line)]">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="text-[color:var(--gold)] font-bold">ضيافة جوية</div>
+                  <button class="btn btn-dark !py-2 !px-3 !rounded-xl text-xs" type="button" onclick="addPerson('food_staff')">+ إضافة</button>
+                </div>
+                <div id="food_staff" class="space-y-2"></div>
+              </div>
+
+              <div class="glass rounded-2xl p-3 border border-[color:var(--line)]">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="text-[color:var(--gold)] font-bold">عمال الصيانة</div>
+                  <button class="btn btn-dark !py-2 !px-3 !rounded-xl text-xs" type="button" onclick="addPerson('maintenance_staff')">+ إضافة</button>
+                </div>
+                <div id="maintenance_staff" class="space-y-2"></div>
+              </div>
+
+              <div class="glass rounded-2xl p-3 border border-[color:var(--line)]">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="text-[color:var(--gold)] font-bold">عمال الكاترينغ</div>
+                  <button class="btn btn-dark !py-2 !px-3 !rounded-xl text-xs" type="button" onclick="addPerson('catering_staff')">+ إضافة</button>
+                </div>
+                <div id="catering_staff" class="space-y-2"></div>
+              </div>
+
+              <div class="glass rounded-2xl p-3 border border-[color:var(--line)]">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="text-[color:var(--gold)] font-bold">عمال السادكوب</div>
+                  <button class="btn btn-dark !py-2 !px-3 !rounded-xl text-xs" type="button" onclick="addPerson('sadkoub_staff')">+ إضافة</button>
+                </div>
+                <div id="sadkoub_staff" class="space-y-2"></div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="label">المفقودات التي وُجدت على الطائرة</label>
+              <textarea id="found_items" class="ta" placeholder="اكتب المفقودات إن وجدت..."></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+              <div>
+                <label class="label">اسم المستلم</label>
+                <input id="receiver_name" class="inp" type="text" placeholder="اسم المستلم">
+              </div>
+            </div>
+          </div>
+
+          <div class="section p-4 sm:p-5">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="text-[color:var(--gold)] font-extrabold">آليات الخدمة</div>
+              <span class="mini">اختر الموجود واملأ الأعداد عند الحاجة</span>
+            </div>
+            <div class="divider mb-4"></div>
+
+            <div id="svcGrid" class="svcGrid">
+              <div class="svcCard" data-svc="lift">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">⚙</span> رافعة</div>
+                  <div class="svcToggle"><input id="svc_lift" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="catering">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🍽</span> كاترينغ</div>
+                  <div class="svcToggle"><input id="svc_catering1" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="fire">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🧯</span> إطفائية</div>
+                  <div class="svcToggle"><input id="svc_fire" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="compressor">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🧰</span> الضاغط</div>
+                  <div class="svcToggle"><input id="svc_compressor" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="battery">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🔋</span> البطارية</div>
+                  <div class="svcToggle"><input id="svc_battery" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="ac">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">❄</span> خدمة مكيف</div>
+                  <div class="svcToggle"><input id="svc_ac" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="fresh">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">💧</span> مياه حلوة</div>
+                  <div class="svcToggle"><input id="svc_fresh_water" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="salt">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🧂</span> مياه مالحة</div>
+                  <div class="svcToggle"><input id="svc_salt_water" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="sadcup">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🧪</span> ساد كوب</div>
+                  <div class="svcToggle"><input id="svc_sad_cup" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="beltStairsQty">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🪜</span> سلم القشاط (عدد)</div>
+                </div>
+                <div class="svcQtyRow">
+                  <span class="mini">أدخل العدد</span>
+                  <input id="svc_belt_stairs_qty" class="svcQty" type="number" min="0" placeholder="0">
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="paxStairsQty">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🪜</span> سلالم ركاب (عدد)</div>
+                </div>
+                <div class="svcQtyRow">
+                  <span class="mini">أدخل العدد</span>
+                  <input id="svc_stairs_qty" class="svcQty" type="number" min="0" placeholder="0">
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="cartsQty">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🧳</span> عربات (عدد)</div>
+                </div>
+                <div class="svcQtyRow">
+                  <span class="mini">أدخل العدد</span>
+                  <input id="svc_carts_qty" class="svcQty" type="number" min="0" placeholder="0">
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="chargeQty">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">⚡</span> شحن (عدد)</div>
+                </div>
+                <div class="svcQtyRow">
+                  <span class="mini">أدخل العدد</span>
+                  <input id="svc_charge_qty" class="svcQty" type="number" min="0" placeholder="0">
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="tractorQty">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🚜</span> جرار (عدد)</div>
+                </div>
+                <div class="svcQtyRow">
+                  <span class="mini">أدخل العدد</span>
+                  <input id="svc_tractor_qty" class="svcQty" type="number" min="0" placeholder="0">
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="pushback">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🛞</span> بوش باك</div>
+                  <div class="svcToggle"><input id="svc_pushback" type="checkbox"></div>
+                </div>
+              </div>
+
+              <div class="svcCard" data-svc="loader">
+                <div class="svcHead">
+                  <div class="svcName"><span class="svcIcon">🏗</span> لودر</div>
+                  <div class="svcToggle"><input id="svc_loader" type="checkbox"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 glass rounded-2xl p-3 border border-[color:var(--line)]">
+              <div class="text-[color:var(--gold)] font-bold mb-2">تشغيل الإنارة</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="label">المدة التشغيلية</label>
+                  <input id="light_duration" class="inp" type="text" placeholder="مثال: 25 دقيقة">
+                </div>
+                <div>
+                  <label class="label">رقم المهبط</label>
+                  <input id="light_stand" class="inp" type="text" placeholder="رقم المهبط">
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="label">ملاحظات</label>
+              <textarea id="notes" class="ta" placeholder="أي ملاحظات إضافية..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="section p-4 sm:p-5">
+            <div class="flex items-center justify-content-between mb-3">
+              <div class="text-[color:var(--gold)] font-extrabold">معاينة التقرير</div>
+              <div class="mini">المعاينة للشاشة والطباعة</div>
+            </div>
+            <div class="divider mb-4"></div>
+
+            <div id="previewBox" class="glass rounded-2xl p-4 border border-[color:var(--line)] min-h-[280px]">
+              <div class="text-center mini py-10">اضغط “إنشاء المعاينة” لعرض التقرير هنا</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pdfRoot" aria-hidden="true">
+    <div id="pdfPage" class="pdfPage"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
+  <script>
+    // ===== Helpers =====
+    function setTodayDefaults(){
+      const today = new Date().toISOString().split('T')[0];
+      if(!document.getElementById('arr_date').value) document.getElementById('arr_date').value = today;
+      if(!document.getElementById('dep_date').value) document.getElementById('dep_date').value = today;
+    }
+
+    function escapeHtml(s){
+      return (s ?? '').toString()
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    function addPerson(containerId){
+      const container = document.getElementById(containerId);
+      const row = document.createElement('div');
+      row.className = "flex gap-2 items-center";
+      row.innerHTML = `
+        <input type="text" placeholder="اسم الموظف" class="inp !py-2 !rounded-xl flex-1">
+        <button type="button" class="btn btn-soft !py-2 !px-3 !rounded-xl text-xs" title="حذف">حذف</button>
+      `;
+      row.querySelector('button').onclick = () => row.remove();
+      container.appendChild(row);
+    }
+
+    function getPeople(containerId){
+      const container = document.getElementById(containerId);
+      const inputs = Array.from(container.querySelectorAll('input[type="text"]'));
+      return inputs.map(i => i.value.trim()).filter(Boolean);
+    }
+
+    // دالة لاستخراج الأسماء المضافة بشكل جدول شاقولي/عمودي للمعاينة والـ PDF
+    function getVerticalStaffRows(d) {
+      const maxLen = Math.max(
+        d.movement_staff.length, d.loading_staff.length, d.food_staff.length,
+        d.maintenance_staff.length, d.catering_staff.length, d.sadkoub_staff.length
+      );
+      const rows = [];
+      for(let i=0; i<maxLen; i++){
+        rows.push({
+          movement: d.movement_staff[i] || "",
+          loading: d.loading_staff[i] || "",
+          food: d.food_staff[i] || "",
+          maintenance: d.maintenance_staff[i] || "",
+          catering: d.catering_staff[i] || "",
+          sadkoub: d.sadkoub_staff[i] || ""
+        });
+      }
+      return rows;
+    }
+
+    function n0(id){
+      const v = document.getElementById(id)?.value;
+      const num = parseInt((v ?? "").toString(), 10);
+      return isNaN(num) ? 0 : Math.max(0, num);
+    }
+
+    function yn(id){
+      return !!document.getElementById(id)?.checked;
+    }
+
+    const SVC_ALL = [
+      "lift","catering","fire","compressor","battery","ac","fresh","salt","sadcup",
+      "beltStairsQty","paxStairsQty","cartsQty","chargeQty","tractorQty","pushback","loader"
+    ];
+
+    const SVC_FLYDUBAI = ["lift","beltStairsQty","paxStairsQty","cartsQty"];
+    const SVC_FLYADEIL_NAS = ["beltStairsQty","paxStairsQty","cartsQty"];
+
+    function getAircraftRuleSet(aircraftType){
+      const t = (aircraftType || "").trim();
+      if(t === "فلاي دبي") return new Set(SVC_FLYDUBAI);
+      if(t === "فلاي أديل" || t === "فلاي ناس") return new Set(SVC_FLYADEIL_NAS);
+      return new Set(SVC_ALL);
+    }
+
+    function clearHiddenServiceValues(allowedSet){
+      const checkMap = {
+        lift: "svc_lift", catering: "svc_catering1", fire: "svc_fire",
+        compressor: "svc_compressor", battery: "svc_battery", ac: "svc_ac",
+        fresh: "svc_fresh_water", salt: "svc_salt_water", sadcup: "svc_sad_cup",
+        pushback: "svc_pushback", loader: "svc_loader",
+      };
+      Object.entries(checkMap).forEach(([key, id]) => {
+        if(!allowedSet.has(key)){
+          const el = document.getElementById(id);
+          if(el) el.checked = false;
+        }
+      });
+
+      const qtyMap = {
+        beltStairsQty: "svc_belt_stairs_qty", paxStairsQty: "svc_stairs_qty",
+        cartsQty: "svc_carts_qty", chargeQty: "svc_charge_qty", tractorQty: "svc_tractor_qty",
+      };
+      Object.entries(qtyMap).forEach(([key, id]) => {
+        if(!allowedSet.has(key)){
+          const el = document.getElementById(id);
+          if(el) el.value = "";
+        }
+      });
+    }
+
+    function applyServiceVisibility(){
+      const aircraft = (document.getElementById('aircraft_type').value || "").trim();
+      const allowed = getAircraftRuleSet(aircraft);
+
+      const cards = Array.from(document.querySelectorAll('#svcGrid .svcCard[data-svc]'));
+      cards.forEach(card => {
+        const key = card.getAttribute('data-svc');
+        if(allowed.has(key)) card.classList.remove('hidden');
+        else card.classList.add('hidden');
+      });
+      clearHiddenServiceValues(allowed);
+    }
+
+    function isSvcVisible(key){
+      const card = document.querySelector(`#svcGrid .svcCard[data-svc="${key}"]`);
+      if(!card) return true;
+      return !card.classList.contains('hidden');
+    }
+
+    function gatherServices(){
+      const chips = [];
+      const addCheck = (label, id, key) => {
+        if(!isSvcVisible(key)) return;
+        if(yn(id)) chips.push(label);
+      };
+      const addQty = (label, id, key) => {
+        if(!isSvcVisible(key)) return;
+        const q = n0(id);
+        if(q > 0) chips.push(`${label} (${q})`);
+      };
+
+      addCheck("رافعة", "svc_lift", "lift");
+      addCheck("كاترينغ", "svc_catering1", "catering");
+      addCheck("الضاغط", "svc_compressor", "compressor");
+      addCheck("البطارية", "svc_battery", "battery");
+      addCheck("مياه مالحة", "svc_salt_water", "salt");
+      addCheck("مياه حلوة", "svc_fresh_water", "fresh");
+      addCheck("ساد كوب", "svc_sad_cup", "sadcup");
+      addCheck("خدمة مكيف", "svc_ac", "ac");
+      addCheck("إطفائية", "svc_fire", "fire");
+
+      addQty("سلم القشاط", "svc_belt_stairs_qty", "beltStairsQty");
+      addQty("سلالم ركاب", "svc_stairs_qty", "paxStairsQty");
+      addQty("عربات", "svc_carts_qty", "cartsQty");
+      addQty("شحن", "svc_charge_qty", "chargeQty");
+      addQty("جرار", "svc_tractor_qty", "tractorQty");
+
+      addCheck("بوش باك", "svc_pushback", "pushback");
+      addCheck("لودر", "svc_loader", "loader");
+
+      return chips;
+    }
+
+    function gatherData(){
+      return {
+        rep_writer: document.getElementById('rep_writer').value.trim(),
+        aircraft_type: document.getElementById('aircraft_type').value.trim(),
+        arr_date: document.getElementById('arr_date').value,
+        arr_time: document.getElementById('arr_time').value,
+        dep_date: document.getElementById('dep_date').value,
+        dep_time: document.getElementById('dep_time').value,
+        stand_num: document.getElementById('stand_num').value.trim(),
+        gate_num: document.getElementById('gate_num').value.trim(),
+        flight_arr: document.getElementById('flight_arr').value.trim(),
+        flight_dep: document.getElementById('flight_dep').value.trim(),
+
+        pax_count: n0('pax_count'),
+        delegations_count: n0('delegations_count'),
+        vip_pax: n0('vip_pax'),
+
+        movement_staff: getPeople('movement_staff'),
+        loading_staff: getPeople('loading_staff'),
+        food_staff: getPeople('food_staff'),
+        maintenance_staff: getPeople('maintenance_staff'),
+        catering_staff: getPeople('catering_staff'),
+        sadkoub_staff: getPeople('sadkoub_staff'),
+
+        found_items: document.getElementById('found_items').value.trim(),
+        receiver_name: document.getElementById('receiver_name').value.trim(),
+
+        services_chips: gatherServices(),
+        light_duration: document.getElementById('light_duration').value.trim(),
+        light_stand: document.getElementById('light_stand').value.trim(),
+        notes: document.getElementById('notes').value.trim(),
+      };
+    }
+
+    // دالة تدمج دوائر الآليات مع دوائر الإنارة
+    function getCombinedChips(d) {
+       let chips = [...d.services_chips];
+       if (d.light_duration) chips.push(`إنارة (مدة): ${d.light_duration}`);
+       if (d.light_stand) chips.push(`إنارة (مهبط): ${d.light_stand}`);
+       if (chips.length === 0) chips.push("—");
+       return chips;
+    }
+
+    const AIRCRAFT_OPTIONS = [
+      "السورية", "فلاي شام", "الأردنية", "الجزيرة", "العربية",
+      "القطرية", "التركية", "التركية أجيت صبيحة", "فلاي دبي",
+      "فلاي ناس", "فلاي أديل", "بوخاريست", "إغاثي", "حربي"
+    ];
+
+    function setAircraftType(val){
+      const hidden = document.getElementById('aircraft_type');
+      const btnText = document.getElementById('aircraft_btn_text');
+      hidden.value = (val || "").trim();
+      btnText.textContent = hidden.value ? hidden.value : "اختر نوع الطائرة...";
+      renderAircraftList(document.getElementById('aircraft_search').value || "");
+      applyServiceVisibility(); 
+    }
+
+    function renderAircraftList(filterText){
+      const list = document.getElementById('aircraft_list');
+      const empty = document.getElementById('aircraft_empty');
+      const selected = (document.getElementById('aircraft_type').value || "").trim();
+
+      const f = (filterText || "").trim().toLowerCase();
+      const items = AIRCRAFT_OPTIONS.filter(x => x.toLowerCase().includes(f));
+
+      list.innerHTML = "";
+      if(items.length === 0){
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      items.forEach(name => {
+        const b = document.createElement('button');
+        b.type = "button";
+        b.className = "select-item" + (name === selected ? " selected" : "");
+        b.setAttribute("role", "option");
+        b.setAttribute("aria-selected", name === selected ? "true" : "false");
+        b.dataset.value = name;
+        b.innerHTML = `<span>${escapeHtml(name)}</span><span class="tick">✓</span>`;
+        b.onclick = () => {
+          setAircraftType(name);
+          closeAircraftMenu();
+        };
+        list.appendChild(b);
+      });
+    }
+
+    function openAircraftMenu(){
+      const wrap = document.getElementById('aircraftSelect');
+      const menu = document.getElementById('aircraft_menu');
+      const btn = document.getElementById('aircraft_btn');
+      wrap.classList.add('open');
+      menu.classList.remove('hidden');
+      btn.setAttribute("aria-expanded", "true");
+      document.getElementById('aircraft_search').focus();
+      renderAircraftList(document.getElementById('aircraft_search').value || "");
+    }
+
+    function closeAircraftMenu(){
+      const wrap = document.getElementById('aircraftSelect');
+      const menu = document.getElementById('aircraft_menu');
+      const btn = document.getElementById('aircraft_btn');
+      wrap.classList.remove('open');
+      menu.classList.add('hidden');
+      btn.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleAircraftMenu(){
+      const menu = document.getElementById('aircraft_menu');
+      if(menu.classList.contains('hidden')) openAircraftMenu();
+      else closeAircraftMenu();
+    }
+
+    function initAircraftSelect(){
+      const btn = document.getElementById('aircraft_btn');
+      const search = document.getElementById('aircraft_search');
+      btn.addEventListener('click', toggleAircraftMenu);
+      search.addEventListener('input', (e) => { renderAircraftList(e.target.value || ""); });
+      document.addEventListener('keydown', (e) => { if(e.key === "Escape") closeAircraftMenu(); });
+      document.addEventListener('click', (e) => {
+        const wrap = document.getElementById('aircraftSelect');
+        if(!wrap.contains(e.target)) closeAircraftMenu();
+      });
+      setAircraftType("");
+      closeAircraftMenu();
+    }
+
+    function buildPreview(){
+      const d = gatherData();
+      const box = document.getElementById('previewBox');
+      const createdStr = new Date().toLocaleString('ar');
+
+      const allChipsHtml = getCombinedChips(d).map(x => `<span class="chip">${escapeHtml(x)}</span>`).join("");
+        
+      const verticalRows = getVerticalStaffRows(d);
+      let staffHtml = `<div class="text-center mini py-2">لا توجد أسماء مضافة</div>`;
+      
+      if(verticalRows.length > 0) {
+         staffHtml = `
+            <div class="overflow-x-auto">
+              <table class="w-full text-center text-sm border-collapse border border-[color:var(--line)]">
+                <thead>
+                  <tr class="bg-black/20 text-[color:var(--gold)]">
+                    <th class="p-2 border border-[color:var(--line)]">موظف الحركة</th>
+                    <th class="p-2 border border-[color:var(--line)]">عمال التحميل</th>
+                    <th class="p-2 border border-[color:var(--line)]">ضيافة جوية</th>
+                    <th class="p-2 border border-[color:var(--line)]">عمال الصيانة</th>
+                    <th class="p-2 border border-[color:var(--line)]">عمال الكاترينغ</th>
+                    <th class="p-2 border border-[color:var(--line)]">عمال السادكوب</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${verticalRows.map(r => `
+                    <tr>
+                      <td class="p-2 border border-[color:var(--line)]">${escapeHtml(r.movement)}</td>
+                      <td class="p-2 border border-[color:var(--line)]">${escapeHtml(r.loading)}</td>
+                      <td class="p-2 border border-[color:var(--line)]">${escapeHtml(r.food)}</td>
+                      <td class="p-2 border border-[color:var(--line)]">${escapeHtml(r.maintenance)}</td>
+                      <td class="p-2 border border-[color:var(--line)]">${escapeHtml(r.catering)}</td>
+                      <td class="p-2 border border-[color:var(--line)]">${escapeHtml(r.sadkoub)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+         `;
+      }
+
+      box.innerHTML = `
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div class="text-[color:var(--gold)] font-extrabold text-lg">تقرير ساحة الطيران - خدمة الطائرة</div>
+            <div class="mini mt-1">تاريخ الإنشاء: ${escapeHtml(createdStr)}</div>
+          </div>
+          <div class="text-right">
+            <div class="mini">كاتب التقرير</div>
+            <div class="font-extrabold text-base">${escapeHtml(d.rep_writer || "—")}</div>
+          </div>
+        </div>
+        <div class="divider my-4"></div>
+        <div class="grid grid-cols-1 gap-3">
+          <div class="glass rounded-2xl p-4 border border-[color:var(--line)]">
+            <div class="text-[color:var(--gold)] font-extrabold mb-2">بيانات الرحلة</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+              <div><span class="text-[color:var(--gold)] font-bold">نوع الطائرة:</span> ${escapeHtml(d.aircraft_type || "—")}</div>
+              <div><span class="text-[color:var(--gold)] font-bold">عدد الركاب:</span> <b class="text-[color:var(--gold)]">${escapeHtml(d.pax_count)}</b></div>
+              <div><span class="text-[color:var(--gold)] font-bold">وفود:</span> ${escapeHtml(d.delegations_count)}</div>
+              <div><span class="text-[color:var(--gold)] font-bold">ركاب VIP:</span> ${escapeHtml(d.vip_pax)}</div>
+              <div><span class="text-[color:var(--gold)] font-bold">توقيت الوصول:</span> ${escapeHtml(d.arr_date||"—")} / ${escapeHtml(d.arr_time||"—")}</div>
+              <div><span class="text-[color:var(--gold)] font-bold">توقيت المغادرة:</span> ${escapeHtml(d.dep_date||"—")} / ${escapeHtml(d.dep_time||"—")}</div>
+              <div><span class="text-[color:var(--gold)] font-bold">مهبط الطائرة:</span> فنكر ${escapeHtml(d.stand_num||"—")} — بوابة ${escapeHtml(d.gate_num||"—")}</div>
+              <div><span class="text-[color:var(--gold)] font-bold">رقم الرحلة:</span> قدوم ${escapeHtml(d.flight_arr||"—")} — مغادرة ${escapeHtml(d.flight_dep||"—")}</div>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-4 border border-[color:var(--line)]">
+            <div class="text-[color:var(--gold)] font-extrabold mb-3">الطواقم الموظفين</div>
+            ${staffHtml}
+            <div class="divider my-4"></div>
+            <div class="mt-3 text-sm">
+              <div class="text-[color:var(--gold)] font-bold mb-1">المفقودات التي وُجدت</div>
+              <div class="mini" style="white-space:pre-wrap">${escapeHtml(d.found_items || "—")}</div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-sm">
+              <div><span class="text-[color:var(--gold)] font-bold">اسم المستلم:</span> ${escapeHtml(d.receiver_name || "—")}</div>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-4 border border-[color:var(--line)]">
+            <div class="text-[color:var(--gold)] font-extrabold mb-2">آليات الخدمة والإنارة</div>
+            <div class="flex flex-wrap gap-2">${allChipsHtml}</div>
+            <div class="mt-4 text-sm">
+              <div class="text-[color:var(--gold)] font-bold mb-1">ملاحظات</div>
+              <div class="mini" style="white-space:pre-wrap">${escapeHtml(d.notes || "—")}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function safeText(x){ return (x && x.toString().trim()) ? x.toString().trim() : "—"; }
+
+    function buildPdfTemplateHtml(d){
+      const createdStr = new Date().toLocaleString('ar');
+      const allChipsHtml = getCombinedChips(d).map(s => `<span class="pdfChip">${escapeHtml(s)}</span>`).join("");
+      const staffRows = getVerticalStaffRows(d);
+
+      return `
+        <div class="pdfPage">
+          <div class="pdfHeader">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <img src="logo.png" onerror="this.style.display='none'" style="width:65px; height:65px; object-fit:contain; border-radius:12px; background:rgba(255,255,255,.1); padding:6px;">
+              <div>
+                <div style="font-weight:900; font-size:14px; opacity:.92; margin-bottom:4px;">الجمهورية العربية السورية</div>
+                <h1>تقرير ساحة الطيران - خدمة الطائرة</h1>
+                <div class="sub">تاريخ الإنشاء: ${escapeHtml(createdStr)}</div>
+              </div>
+            </div>
+            <div class="pdfBadge">كاتب التقرير ${escapeHtml(safeText(d.rep_writer))}</div>
+          </div>
+
+          <div class="pdfGrid">
+            <div class="pdfCard">
+              <div class="pdfCardTitle">بيانات الرحلة</div>
+              <div class="pdfCardBody">
+                <table class="pdfTable">
+                  <tr>
+                    <td class="k" style="width:20%;">نوع الطائرة</td><td class="v" style="width:30%;">${escapeHtml(safeText(d.aircraft_type))}</td>
+                    <td class="k" style="width:20%;">عدد الركاب</td><td class="v" style="width:30%;">${escapeHtml(d.pax_count)}</td>
+                  </tr>
+                  <tr>
+                    <td class="k">وفود</td><td class="v">${escapeHtml(d.delegations_count)}</td>
+                    <td class="k">ركاب VIP</td><td class="v">${escapeHtml(d.vip_pax)}</td>
+                  </tr>
+                  <tr>
+                    <td class="k">توقيت الوصول</td><td class="v" style="direction:ltr; text-align:right;">${escapeHtml(safeText(d.arr_time))} / ${escapeHtml(safeText(d.arr_date))}</td>
+                    <td class="k">توقيت المغادرة</td><td class="v" style="direction:ltr; text-align:right;">${escapeHtml(safeText(d.dep_time))} / ${escapeHtml(safeText(d.dep_date))}</td>
+                  </tr>
+                  <tr>
+                    <td class="k">مهبط الطائرة</td><td class="v">فنكر ${escapeHtml(safeText(d.stand_num))} — بوابة ${escapeHtml(safeText(d.gate_num))}</td>
+                    <td class="k">رقم الرحلة</td><td class="v">قدوم ${escapeHtml(safeText(d.flight_arr))} — مغادرة ${escapeHtml(safeText(d.flight_dep))}</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <div class="pdfCard">
+              <div class="pdfCardTitle">الطواقم الموظفين</div>
+              <div class="pdfCardBody">
+                <table class="pdfTable" style="text-align:center;">
+                  <tr style="background:#f8fafc;">
+                    <td class="k" style="width:16.6%;">موظف الحركة</td>
+                    <td class="k" style="width:16.6%;">عمال التحميل</td>
+                    <td class="k" style="width:16.6%;">ضيافة جوية</td>
+                    <td class="k" style="width:16.6%;">عمال الصيانة</td>
+                    <td class="k" style="width:16.6%;">عمال الكاترينغ</td>
+                    <td class="k" style="width:16.6%;">عمال السادكوب</td>
+                  </tr>
+                  ${staffRows.length === 0 ? `<tr><td colspan="6" class="v">—</td></tr>` : staffRows.map(r => `
+                    <tr>
+                      <td class="v" style="font-size:14px;">${escapeHtml(r.movement)}</td>
+                      <td class="v" style="font-size:14px;">${escapeHtml(r.loading)}</td>
+                      <td class="v" style="font-size:14px;">${escapeHtml(r.food)}</td>
+                      <td class="v" style="font-size:14px;">${escapeHtml(r.maintenance)}</td>
+                      <td class="v" style="font-size:14px;">${escapeHtml(r.catering)}</td>
+                      <td class="v" style="font-size:14px;">${escapeHtml(r.sadkoub)}</td>
+                    </tr>
+                  `).join('')}
+                </table>
+
+                <div style="margin-top:20px;">
+                  <table class="pdfTable">
+                    <tr>
+                      <td class="k" style="width:20%;">اسم المستلم</td>
+                      <td class="v" style="width:80%;">${escapeHtml(safeText(d.receiver_name))}</td>
+                    </tr>
+                  </table>
+                  <div style="margin-top:14px;">
+                    <div style="font-weight:900; color:#0f172a; font-size:14px; margin-bottom:6px;">المفقودات التي وُجدت على الطائرة:</div>
+                    <div class="pdfNotes">${escapeHtml(safeText(d.found_items))}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pdfCard">
+              <div class="pdfCardTitle">آليات الخدمة والإنارة</div>
+              <div class="pdfCardBody">
+                <div class="pdfChips">${allChipsHtml}</div>
+                <div style="margin-top:14px;">
+                  <div style="font-weight:900; color:#0f172a; font-size:14px; margin-bottom:6px;">ملاحظات:</div>
+                  <div class="pdfNotes">${escapeHtml(safeText(d.notes))}</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+    }
+
+    async function exportPdfPro(){
+      const btn = document.getElementById('exportPdfBtn');
+      const old = btn.innerText;
+      btn.innerText = "جاري إنشاء PDF...";
+      btn.disabled = true;
+
+      try{
+        const d = gatherData();
+        const pdfPage = document.getElementById('pdfPage');
+        pdfPage.innerHTML = buildPdfTemplateHtml(d);
+
+        let flightName = "";
+        if (d.flight_arr && d.flight_dep) flightName = `${d.flight_arr}_${d.flight_dep}`;
+        else if (d.flight_arr) flightName = d.flight_arr;
+        else if (d.flight_dep) flightName = d.flight_dep;
+        else flightName = `Ramp_Report_${new Date().toISOString().slice(0,10)}`;
+
+        flightName = flightName.replace(/[\/\\:*?"<>|\s]/g, '-');
+        const fileName = `${flightName}.pdf`;
+
+        const opt = {
+          margin: [10, 10, 10, 10], 
+          filename: fileName,
+          image: { type: 'jpeg', quality: 1.0 }, 
+          html2canvas: {
+            scale: 2, 
+            useCORS: true,
+            windowWidth: 1100, // منع القص بجعل العرض ثابت 
+            scrollY: 0, 
+            x: 0
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+          pagebreak: { mode: ['css', 'legacy'] } 
+        };
+
+        // تم التعديل هنا: تحويل الـ PDF إلى Blob ثم مشاركته أو تنزيله كبديل
+        await html2pdf().set(opt).from(pdfPage).toPdf().get('pdf').then(async function (pdfObj) {
+          const pdfBlob = pdfObj.output('blob');
+          const fileForShare = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+          if (navigator.canShare && navigator.canShare({ files: [fileForShare] })) {
+            try {
+              await navigator.share({
+                title: 'تقرير ساحة الطيران',
+                text: 'مرفق تقرير ساحة الطيران بصيغة PDF.',
+                files: [fileForShare]
+              });
+            } catch (error) {
+              if (error.name !== 'AbortError') saveAs(pdfBlob, fileName);
+            }
+          } else {
+            saveAs(pdfBlob, fileName);
+          }
+        });
+
+      }catch(e){
+        alert("حدث خطأ أثناء تصدير PDF: " + (e?.message || e));
+      }finally{
+        btn.innerText = old;
+        btn.disabled = false;
+      }
+    }
+
+    // ===== DOCX Native Export =====
+    async function exportDocxNative(){
+      const btn = document.getElementById('exportWordBtn');
+      const oldText = btn.innerText;
+      btn.innerText = "جاري التجهيز...";
+      btn.disabled = true;
+
+      try {
+        const d = gatherData();
+        const docx = window.docx;
+        const {
+          Document, Packer, Paragraph, TextRun, AlignmentType,
+          Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
+          PageOrientation, ImageRun
+        } = docx;
+
+        const rtl = true;
+        const createdStr = new Date().toLocaleString('ar');
+
+        async function loadLogoBytes(){
+          try{
+            const res = await fetch("logo.png", { cache: "no-store" });
+            if(!res.ok) throw new Error("logo fetch failed");
+            const buf = await res.arrayBuffer();
+            return new Uint8Array(buf);
+          }catch(e){
+            return null;
+          }
+        }
+        const logoBytes = await loadLogoBytes();
+
+        const run = (text, opt={}) => new TextRun({ text: text ?? "", bold: !!opt.bold, size: opt.size ?? 24, color: opt.color });
+        const p = (runsOrText, opt={}) => {
+          const children = Array.isArray(runsOrText) ? runsOrText : [run(runsOrText, opt.run || {})];
+          return new Paragraph({
+            children, alignment: opt.align ?? AlignmentType.RIGHT,
+            bidirectional: rtl, spacing: { before: opt.before ?? 60, after: opt.after ?? 60 },
+          });
+        };
+
+        const cell = (children, opt={}) => new TableCell({
+          children: Array.isArray(children) ? children : [p(children)],
+          width: opt.width ? { size: opt.width, type: WidthType.PERCENTAGE } : undefined,
+          shading: opt.fill ? { type: ShadingType.CLEAR, color: "auto", fill: opt.fill } : undefined,
+          margins: { top: 120, bottom: 120, left: 140, right: 140 },
+          columnSpan: opt.colSpan
+        });
+
+        const borders = {
+          top:    { style: BorderStyle.SINGLE, size: 8, color: "B9A779" },
+          bottom: { style: BorderStyle.SINGLE, size: 8, color: "B9A779" },
+          left:   { style: BorderStyle.SINGLE, size: 8, color: "B9A779" },
+          right:  { style: BorderStyle.SINGLE, size: 8, color: "B9A779" },
+          insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: "E6E6E6" },
+          insideVertical:   { style: BorderStyle.SINGLE, size: 6, color: "E6E6E6" },
+        };
+
+        const rowTitle = (title, colSpan=4) => new TableRow({
+          children: [
+            new TableCell({
+              children: [p([run(title, {bold:true, size:26, color:"FFFFFF"})], {align: AlignmentType.RIGHT})],
+              columnSpan: colSpan,
+              shading: { type: ShadingType.CLEAR, color: "auto", fill: "0B2F2A" },
+              margins: { top: 140, bottom: 140, left: 140, right: 140 },
+            })
+          ],
+        });
+
+        const row2 = (k1, v1, k2, v2) => new TableRow({
+          children: [
+            cell([p([run(k1, {bold:true, color:"0B2F2A"})])], { width: 15, fill: "F6F2E8" }),
+            cell([p([run((v1 ?? "—").toString(), {color:"111111"})])], { width: 35 }),
+            cell([p([run(k2, {bold:true, color:"0B2F2A"})])], { width: 15, fill: "F6F2E8" }),
+            cell([p([run((v2 ?? "—").toString(), {color:"111111"})])], { width: 35 }),
+          ],
+        });
+
+        const rowWide = (k, v) => new TableRow({
+          children: [
+            cell([p([run(k, {bold:true, color:"0B2F2A"})])], { width: 20, fill: "F6F2E8" }),
+            cell([p([run((v ?? "—").toString(), {color:"111111"})])], { width: 80, colSpan: 3 })
+          ],
+        });
+
+        const headerLogoCell = logoBytes
+          ? cell([
+              new Paragraph({
+                bidirectional: rtl, alignment: AlignmentType.RIGHT,
+                children: [ new ImageRun({ data: logoBytes, transformation: { width: 72, height: 72 } }) ],
+                spacing: { before: 0, after: 0 }
+              })
+            ], { width: 20 })
+          : cell([p("")], { width: 20 });
+
+        const headerTextCell = cell([
+          p([run("تقرير ساحة الطيران - خدمة الطائرة", {bold:true, size:34, color:"0B2F2A"})], {align: AlignmentType.RIGHT, after: 40}),
+          p([run("تاريخ الإنشاء: " + createdStr, {size:20, color:"444444"})], {align: AlignmentType.RIGHT, before: 0, after: 0}),
+        ], { width: 80 });
+
+        const headerTable = new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: {
+            top:    { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+            bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+            left:   { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+            right:  { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+            insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+            insideVertical:   { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+          },
+          rows: [ new TableRow({ children: [headerTextCell, headerLogoCell] }) ]
+        });
+
+        // Flight Data Table
+        const part1 = new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders,
+          rows: [
+            rowTitle("بيانات الرحلة", 4),
+            row2("كاتب التقرير", d.rep_writer || "—", "نوع الطائرة", d.aircraft_type || "—"),
+            row2("توقيت الوصول", `${d.arr_time || "—"} / ${d.arr_date || "—"}`, "توقيت المغادرة", `${d.dep_time || "—"} / ${d.dep_date || "—"}`),
+            row2("رقم الفنكر", d.stand_num || "—", "رقم البوابة", d.gate_num || "—"),
+            row2("رحلة قدوم", d.flight_arr || "—", "رحلة مغادرة", d.flight_dep || "—"),
+            row2("عدد الركاب", d.pax_count.toString(), "وفود", d.delegations_count.toString()),
+            rowWide("ركاب VIP", d.vip_pax.toString()),
+          ],
+        });
+
+        // Staff Table (Vertical format 6 columns)
+        const staffHeaderRow = new TableRow({
+          children: [
+            cell([p([run("موظف الحركة", {bold:true, color:"0B2F2A"})], {align: AlignmentType.CENTER})], { width: 16.6, fill: "F6F2E8" }),
+            cell([p([run("عمال التحميل", {bold:true, color:"0B2F2A"})], {align: AlignmentType.CENTER})], { width: 16.6, fill: "F6F2E8" }),
+            cell([p([run("ضيافة جوية", {bold:true, color:"0B2F2A"})], {align: AlignmentType.CENTER})], { width: 16.6, fill: "F6F2E8" }),
+            cell([p([run("عمال الصيانة", {bold:true, color:"0B2F2A"})], {align: AlignmentType.CENTER})], { width: 16.6, fill: "F6F2E8" }),
+            cell([p([run("عمال الكاترينغ", {bold:true, color:"0B2F2A"})], {align: AlignmentType.CENTER})], { width: 16.6, fill: "F6F2E8" }),
+            cell([p([run("عمال السادكوب", {bold:true, color:"0B2F2A"})], {align: AlignmentType.CENTER})], { width: 16.6, fill: "F6F2E8" }),
+          ]
+        });
+
+        const vRows = getVerticalStaffRows(d);
+        const staffDataRows = vRows.map(r => new TableRow({
+          children: [
+            cell([p([run(r.movement, {color:"111111"})], {align: AlignmentType.CENTER})], { width: 16.6 }),
+            cell([p([run(r.loading, {color:"111111"})], {align: AlignmentType.CENTER})], { width: 16.6 }),
+            cell([p([run(r.food, {color:"111111"})], {align: AlignmentType.CENTER})], { width: 16.6 }),
+            cell([p([run(r.maintenance, {color:"111111"})], {align: AlignmentType.CENTER})], { width: 16.6 }),
+            cell([p([run(r.catering, {color:"111111"})], {align: AlignmentType.CENTER})], { width: 16.6 }),
+            cell([p([run(r.sadkoub, {color:"111111"})], {align: AlignmentType.CENTER})], { width: 16.6 }),
+          ]
+        }));
+
+        if(staffDataRows.length === 0){
+           staffDataRows.push(new TableRow({ children: [cell([p([run("—")], {align: AlignmentType.CENTER})], {colSpan: 6})] }));
+        }
+
+        const staffTable = new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders,
+          rows: [
+            rowTitle("الطواقم الموظفين", 6),
+            staffHeaderRow,
+            ...staffDataRows
+          ]
+        });
+
+        const foundItemsTable = new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders,
+          rows: [
+            rowTitle("المفقودات والاستلام", 2),
+            new TableRow({
+              children: [
+                cell([p([run("المفقودات التي وُجدت على الطائرة", {bold:true, color:"0B2F2A"})])], { width: 25, fill: "F6F2E8" }),
+                cell([p([run(d.found_items || "—", {color:"111111"})])], { width: 75 })
+              ]
+            }),
+            new TableRow({
+              children: [
+                cell([p([run("اسم المستلم", {bold:true, color:"0B2F2A"})])], { width: 25, fill: "F6F2E8" }),
+                cell([p([run(d.receiver_name || "—", {color:"111111"})])], { width: 75 })
+              ]
+            })
+          ]
+        });
+
+        const allChipsText = getCombinedChips(d).join(" ، ");
+        const part3Rows = [
+            rowTitle("آليات الخدمة والإنارة", 4),
+            rowWide("الآليات", allChipsText),
+            rowWide("ملاحظات", d.notes || "—")
+        ];
+
+        const part3 = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders, rows: part3Rows });
+
+        const doc = new Document({
+          sections: [{
+            properties: {
+              page: { size: { orientation: PageOrientation.LANDSCAPE }, margin: { top: 900, bottom: 900, left: 900, right: 900 } }
+            },
+            children: [ 
+              headerTable, 
+              p(" ", {after: 120}), part1, 
+              p(" ", {after: 120}), staffTable, 
+              p(" ", {after: 120}), foundItemsTable, 
+              p(" ", {after: 120}), part3 
+            ]
+          }]
+        });
+
+        const blob = await Packer.toBlob(doc);
+
+        let flightName = "";
+        if (d.flight_arr && d.flight_dep) flightName = `${d.flight_arr}_${d.flight_dep}`;
+        else if (d.flight_arr) flightName = d.flight_arr;
+        else if (d.flight_dep) flightName = d.flight_dep;
+        else flightName = `Ramp_Report_${new Date().toISOString().slice(0,10)}`;
+
+        flightName = flightName.replace(/[\/\\:*?"<>|\s]/g, '-');
+        const fileName = `${flightName}.docx`;
+        const fileForShare = new File([blob], fileName, { type: blob.type });
+
+        if (navigator.canShare && navigator.canShare({ files: [fileForShare] })) {
+          try {
+            await navigator.share({ title: 'تقرير ساحة الطيران', text: 'مرفق تقرير ساحة الطيران بصيغة Word.', files: [fileForShare] });
+          } catch (error) {
+            if (error.name !== 'AbortError') saveAs(blob, fileName);
+          }
+        } else {
+          saveAs(blob, fileName);
+        }
+
+      } catch (error) {
+        alert("حدث خطأ أثناء التصدير: " + error.message);
+      } finally {
+        btn.innerText = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    function resetForm(){
+      const idsToClear = [
+        'rep_writer','aircraft_type','arr_time','arr_date','dep_time','dep_date',
+        'stand_num','gate_num','flight_arr','flight_dep','pax_count',
+        'delegations_count','vip_pax','found_items','receiver_name',
+        'light_duration','light_stand','notes',
+        'svc_belt_stairs_qty','svc_stairs_qty','svc_carts_qty','svc_charge_qty','svc_tractor_qty'
+      ];
+      idsToClear.forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+
+      setAircraftType("");
+
+      [
+        'svc_lift','svc_catering1','svc_compressor','svc_battery','svc_salt_water','svc_fresh_water',
+        'svc_fire','svc_sad_cup','svc_ac','svc_pushback','svc_loader'
+      ].forEach(id => { const el=document.getElementById(id); if(el) el.checked=false; });
+
+      ['movement_staff','loading_staff','food_staff','maintenance_staff','catering_staff','sadkoub_staff']
+        .forEach(cid => document.getElementById(cid).innerHTML='');
+
+      document.getElementById('previewBox').innerHTML = `<div class="text-center mini py-10">تم تفريغ النموذج — اضغط “إنشاء المعاينة”</div>`;
+
+      addPerson('movement_staff'); addPerson('loading_staff'); addPerson('food_staff');
+      addPerson('maintenance_staff'); addPerson('catering_staff'); addPerson('sadkoub_staff');
+
+      setTodayDefaults();
+      applyServiceVisibility();
+    }
+
+    window.onload = function(){
+      setTodayDefaults();
+      initAircraftSelect();
+      applyServiceVisibility();
+
+      addPerson('movement_staff'); addPerson('loading_staff'); addPerson('food_staff');
+      addPerson('maintenance_staff'); addPerson('catering_staff'); addPerson('sadkoub_staff');
+    };
+  </script>
+</body>
+</html>
