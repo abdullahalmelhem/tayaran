@@ -348,11 +348,11 @@
     }
 
     /* ===== القالب الاحترافي للتصدير كـ PDF ===== */
-    /* تم التعديل لتفادي قص الملف من اليسار */
+    /* التعديل الجوهري: تم تغيير right إلى left لتجنب القص في الموبايل */
     #pdfRoot{
       position: absolute;
       top: 0;
-      right: 0; 
+      left: 0; /* تم التعديل هنا لتبدأ الحاوية من أقصى اليسار ولا يتم قصها */
       width: 1100px;
       direction: rtl;
       font-family: 'Tajawal', Arial, sans-serif;
@@ -1436,14 +1436,16 @@
             scale: 2, 
             useCORS: true,
             windowWidth: 1100, // منع القص بجعل العرض ثابت 
+            width: 1100,       // إجبار الرسمة على أن تكون 1100 بكسل
+            scrollX: 0,        // تجنب مشاكل موضع التمرير في الموبايل
             scrollY: 0, 
-            x: 0
+            x: 0,
+            y: 0
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
           pagebreak: { mode: ['css', 'legacy'] } 
         };
 
-        // تم التعديل هنا: تحويل الـ PDF إلى Blob ثم مشاركته أو تنزيله كبديل
         await html2pdf().set(opt).from(pdfPage).toPdf().get('pdf').then(async function (pdfObj) {
           const pdfBlob = pdfObj.output('blob');
           const fileForShare = new File([pdfBlob], fileName, { type: 'application/pdf' });
