@@ -348,11 +348,10 @@
     }
 
     /* ===== القالب الاحترافي للتصدير كـ PDF ===== */
-    /* التعديل الجوهري: تم تغيير right إلى left لتجنب القص في الموبايل */
     #pdfRoot{
       position: absolute;
       top: 0;
-      left: 0; /* تم التعديل هنا لتبدأ الحاوية من أقصى اليسار ولا يتم قصها */
+      left: 0; 
       width: 1100px;
       direction: rtl;
       font-family: 'Tajawal', Arial, sans-serif;
@@ -524,9 +523,7 @@
 
               <div>
                 <label class="label">نوع الطائرة</label>
-
                 <input id="aircraft_type" type="hidden" value="">
-
                 <div id="aircraftSelect" class="select-wrap">
                   <button id="aircraft_btn" type="button" class="inp select-btn" aria-haspopup="listbox" aria-expanded="false">
                     <span id="aircraft_btn_text">اختر نوع الطائرة...</span>
@@ -886,7 +883,6 @@
       return inputs.map(i => i.value.trim()).filter(Boolean);
     }
 
-    // دالة لاستخراج الأسماء المضافة بشكل جدول شاقولي/عمودي للمعاينة والـ PDF
     function getVerticalStaffRows(d) {
       const maxLen = Math.max(
         d.movement_staff.length, d.loading_staff.length, d.food_staff.length,
@@ -1413,6 +1409,7 @@
       const old = btn.innerText;
       btn.innerText = "جاري إنشاء PDF...";
       btn.disabled = true;
+      const pdfRoot = document.getElementById('pdfRoot');
 
       try{
         const d = gatherData();
@@ -1423,21 +1420,28 @@
         if (d.flight_arr && d.flight_dep) flightName = `${d.flight_arr}_${d.flight_dep}`;
         else if (d.flight_arr) flightName = d.flight_arr;
         else if (d.flight_dep) flightName = d.flight_dep;
-        else flightName = `Ramp_Report_${new Date().toISOString().slice(0,10)}`;
+        else flightName = `Ramp_Report`;
 
+        // التعديل الأول: إضافة الوقت بالثواني لاسم الملف لمنع مشكلة (8)
+        const now = new Date();
+        const timeStamp = `${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
         flightName = flightName.replace(/[\/\\:*?"<>|\s]/g, '-');
-        const fileName = `${flightName}.pdf`;
+        const fileName = `${flightName}_${timeStamp}.pdf`;
+
+        // التعديل الثاني: إظهار العنصر مؤقتاً لضمان قيام الموبايل برسمه وعدم تجاهله
+        pdfRoot.style.opacity = "1";
 
         const opt = {
           margin: [10, 10, 10, 10], 
           filename: fileName,
-          image: { type: 'jpeg', quality: 1.0 }, 
+          image: { type: 'jpeg', quality: 0.98 }, 
           html2canvas: {
-            scale: 2, 
+            // التعديل الثالث: تقليل الدقة في الموبايل لتجنب انهيار الذاكرة وتلف الملف
+            scale: window.innerWidth < 768 ? 1.5 : 2, 
             useCORS: true,
-            windowWidth: 1100, // منع القص بجعل العرض ثابت 
-            width: 1100,       // إجبار الرسمة على أن تكون 1100 بكسل
-            scrollX: 0,        // تجنب مشاكل موضع التمرير في الموبايل
+            windowWidth: 1100,
+            width: 1100,       
+            scrollX: 0,        
             scrollY: 0, 
             x: 0,
             y: 0
@@ -1448,6 +1452,10 @@
 
         await html2pdf().set(opt).from(pdfPage).toPdf().get('pdf').then(async function (pdfObj) {
           const pdfBlob = pdfObj.output('blob');
+          
+          // إعادة إخفاء العنصر بعد الانتهاء
+          pdfRoot.style.opacity = "0.01";
+
           const fileForShare = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
           if (navigator.canShare && navigator.canShare({ files: [fileForShare] })) {
@@ -1467,6 +1475,7 @@
 
       }catch(e){
         alert("حدث خطأ أثناء تصدير PDF: " + (e?.message || e));
+        pdfRoot.style.opacity = "0.01";
       }finally{
         btn.innerText = old;
         btn.disabled = false;
@@ -1585,7 +1594,6 @@
           rows: [ new TableRow({ children: [headerTextCell, headerLogoCell] }) ]
         });
 
-        // Flight Data Table
         const part1 = new Table({
           width: { size: 100, type: WidthType.PERCENTAGE },
           borders,
@@ -1600,7 +1608,6 @@
           ],
         });
 
-        // Staff Table (Vertical format 6 columns)
         const staffHeaderRow = new TableRow({
           children: [
             cell([p([run("موظف الحركة", {bold:true, color:"0B2F2A"})], {align: AlignmentType.CENTER})], { width: 16.6, fill: "F6F2E8" }),
@@ -1712,10 +1719,14 @@
         if (d.flight_arr && d.flight_dep) flightName = `${d.flight_arr}_${d.flight_dep}`;
         else if (d.flight_arr) flightName = d.flight_arr;
         else if (d.flight_dep) flightName = d.flight_dep;
-        else flightName = `Ramp_Report_${new Date().toISOString().slice(0,10)}`;
+        else flightName = `Ramp_Report`;
 
+        // تعديل اسم ملف الوورد أيضاً لضمان التناسق
+        const now = new Date();
+        const timeStamp = `${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
         flightName = flightName.replace(/[\/\\:*?"<>|\s]/g, '-');
-        const fileName = `${flightName}.docx`;
+        const fileName = `${flightName}_${timeStamp}.docx`;
+
         const fileForShare = new File([blob], fileName, { type: blob.type });
 
         if (navigator.canShare && navigator.canShare({ files: [fileForShare] })) {
