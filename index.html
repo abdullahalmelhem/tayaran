@@ -79,7 +79,6 @@
       border-radius: 999px;
       font-weight: 800;
       font-size: 12px;
-      display: inline-block;
     }
 
     .btn{
@@ -349,6 +348,7 @@
     }
 
     /* ===== القالب الاحترافي للتصدير كـ PDF ===== */
+    /* تم التعديل لتفادي قص الملف من اليسار */
     #pdfRoot{
       position: absolute;
       top: 0;
@@ -601,7 +601,7 @@
 
           <div class="section p-4 sm:p-5">
             <div class="flex items-center justify-between gap-3 mb-3">
-              <div class="text-[color:var(--gold)] font-extrabold">الطواقم الموظفين + المفقودات</div>
+              <div class="text-[color:var(--gold)] font-extrabold">الطواقم/الموظفين + المفقودات</div>
               <span class="mini">يمكن إضافة أكثر من اسم لكل بند</span>
             </div>
             <div class="divider mb-4"></div>
@@ -1038,19 +1038,19 @@
         receiver_name: document.getElementById('receiver_name').value.trim(),
 
         services_chips: gatherServices(),
+        svc: {
+          lift: yn('svc_lift'), catering: yn('svc_catering1'), compressor: yn('svc_compressor'),
+          battery: yn('svc_battery'), salt: yn('svc_salt_water'), fresh: yn('svc_fresh_water'),
+          sadcup: yn('svc_sad_cup'), ac: yn('svc_ac'), fire: yn('svc_fire'),
+          beltStairs: n0('svc_belt_stairs_qty'), paxStairs: n0('svc_stairs_qty'),
+          carts: n0('svc_carts_qty'), charge: n0('svc_charge_qty'), tractor: n0('svc_tractor_qty'),
+          pushback: yn('svc_pushback'), loader: yn('svc_loader'),
+        },
+
         light_duration: document.getElementById('light_duration').value.trim(),
         light_stand: document.getElementById('light_stand').value.trim(),
         notes: document.getElementById('notes').value.trim(),
       };
-    }
-
-    // دالة تدمج دوائر الآليات مع دوائر الإنارة
-    function getCombinedChips(d) {
-       let chips = [...d.services_chips];
-       if (d.light_duration) chips.push(`إنارة (مدة): ${d.light_duration}`);
-       if (d.light_stand) chips.push(`إنارة (مهبط): ${d.light_stand}`);
-       if (chips.length === 0) chips.push("—");
-       return chips;
     }
 
     const AIRCRAFT_OPTIONS = [
@@ -1144,7 +1144,8 @@
       const box = document.getElementById('previewBox');
       const createdStr = new Date().toLocaleString('ar');
 
-      const allChipsHtml = getCombinedChips(d).map(x => `<span class="chip">${escapeHtml(x)}</span>`).join("");
+      const chips = (d.services_chips.length ? d.services_chips : ["—"])
+        .map(x => `<span class="chip">${escapeHtml(x)}</span>`).join("");
         
       const verticalRows = getVerticalStaffRows(d);
       let staffHtml = `<div class="text-center mini py-2">لا توجد أسماء مضافة</div>`;
@@ -1207,7 +1208,7 @@
             </div>
           </div>
           <div class="glass rounded-2xl p-4 border border-[color:var(--line)]">
-            <div class="text-[color:var(--gold)] font-extrabold mb-3">الطواقم الموظفين</div>
+            <div class="text-[color:var(--gold)] font-extrabold mb-3">الطواقم / الموظفين</div>
             ${staffHtml}
             <div class="divider my-4"></div>
             <div class="mt-3 text-sm">
@@ -1219,9 +1220,13 @@
             </div>
           </div>
           <div class="glass rounded-2xl p-4 border border-[color:var(--line)]">
-            <div class="text-[color:var(--gold)] font-extrabold mb-2">آليات الخدمة والإنارة</div>
-            <div class="flex flex-wrap gap-2">${allChipsHtml}</div>
-            <div class="mt-4 text-sm">
+            <div class="text-[color:var(--gold)] font-extrabold mb-2">آليات الخدمة</div>
+            <div class="flex flex-wrap gap-2">${chips}</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-3">
+              <div><span class="text-[color:var(--gold)] font-bold">تشغيل الإنارة - المدة:</span> ${escapeHtml(d.light_duration || "—")}</div>
+              <div><span class="text-[color:var(--gold)] font-bold">تشغيل الإنارة - رقم المهبط:</span> ${escapeHtml(d.light_stand || "—")}</div>
+            </div>
+            <div class="mt-3 text-sm">
               <div class="text-[color:var(--gold)] font-bold mb-1">ملاحظات</div>
               <div class="mini" style="white-space:pre-wrap">${escapeHtml(d.notes || "—")}</div>
             </div>
@@ -1231,11 +1236,75 @@
     }
 
     function safeText(x){ return (x && x.toString().trim()) ? x.toString().trim() : "—"; }
+    function yesNo(b){ return b ? "موجود" : "غير موجود"; }
+    function qtyOrDash(n){ return (n && n > 0) ? n.toString() : "—"; }
 
     function buildPdfTemplateHtml(d){
       const createdStr = new Date().toLocaleString('ar');
-      const allChipsHtml = getCombinedChips(d).map(s => `<span class="pdfChip">${escapeHtml(s)}</span>`).join("");
+      const services = (d.services_chips && d.services_chips.length) ? d.services_chips : ["—"];
+      const svcChips = services.map(s => `<span class="pdfChip">${escapeHtml(s)}</span>`).join("");
+      const t = (d.aircraft_type || "").trim();
       const staffRows = getVerticalStaffRows(d);
+
+      let svcTable = "";
+      if(t === "فلاي دبي"){
+        svcTable = `
+          <tr>
+            <td class="k">رافعة</td><td class="v">${escapeHtml(yesNo(d.svc.lift))}</td>
+            <td class="k">سلم القشاط (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.beltStairs))}</td>
+          </tr>
+          <tr>
+            <td class="k">سلالم ركاب (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.paxStairs))}</td>
+            <td class="k">عربات (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.carts))}</td>
+          </tr>
+        `;
+      } else if(t === "فلاي أديل" || t === "فلاي ناس"){
+        svcTable = `
+          <tr>
+            <td class="k">سلم القشاط (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.beltStairs))}</td>
+            <td class="k">سلالم ركاب (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.paxStairs))}</td>
+          </tr>
+          <tr>
+            <td class="k">عربات (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.carts))}</td>
+            <td class="k">—</td><td class="v">—</td>
+          </tr>
+        `;
+      } else {
+        svcTable = `
+          <tr>
+            <td class="k">رافعة</td><td class="v">${escapeHtml(yesNo(d.svc.lift))}</td>
+            <td class="k">كاترينغ</td><td class="v">${escapeHtml(yesNo(d.svc.catering))}</td>
+          </tr>
+          <tr>
+            <td class="k">إطفائية</td><td class="v">${escapeHtml(yesNo(d.svc.fire))}</td>
+            <td class="k">بوش باك</td><td class="v">${escapeHtml(yesNo(d.svc.pushback))}</td>
+          </tr>
+          <tr>
+            <td class="k">لودر</td><td class="v">${escapeHtml(yesNo(d.svc.loader))}</td>
+            <td class="k">الضاغط</td><td class="v">${escapeHtml(yesNo(d.svc.compressor))}</td>
+          </tr>
+          <tr>
+            <td class="k">البطارية</td><td class="v">${escapeHtml(yesNo(d.svc.battery))}</td>
+            <td class="k">خدمة مكيف</td><td class="v">${escapeHtml(yesNo(d.svc.ac))}</td>
+          </tr>
+          <tr>
+            <td class="k">مياه مالحة</td><td class="v">${escapeHtml(yesNo(d.svc.salt))}</td>
+            <td class="k">مياه حلوة</td><td class="v">${escapeHtml(yesNo(d.svc.fresh))}</td>
+          </tr>
+          <tr>
+            <td class="k">ساد كوب</td><td class="v">${escapeHtml(yesNo(d.svc.sadcup))}</td>
+            <td class="k">سلم القشاط (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.beltStairs))}</td>
+          </tr>
+          <tr>
+            <td class="k">سلالم ركاب (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.paxStairs))}</td>
+            <td class="k">عربات (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.carts))}</td>
+          </tr>
+          <tr>
+            <td class="k">شحن (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.charge))}</td>
+            <td class="k">جرار (عدد)</td><td class="v">${escapeHtml(qtyOrDash(d.svc.tractor))}</td>
+          </tr>
+        `;
+      }
 
       return `
         <div class="pdfPage">
@@ -1248,7 +1317,7 @@
                 <div class="sub">تاريخ الإنشاء: ${escapeHtml(createdStr)}</div>
               </div>
             </div>
-            <div class="pdfBadge">كاتب التقرير ${escapeHtml(safeText(d.rep_writer))}</div>
+            <div class="pdfBadge">كاتب التقرير: ${escapeHtml(safeText(d.rep_writer))}</div>
           </div>
 
           <div class="pdfGrid">
@@ -1277,7 +1346,7 @@
             </div>
 
             <div class="pdfCard">
-              <div class="pdfCardTitle">الطواقم الموظفين</div>
+              <div class="pdfCardTitle">الطواقم / الموظفين</div>
               <div class="pdfCardBody">
                 <table class="pdfTable" style="text-align:center;">
                   <tr style="background:#f8fafc;">
@@ -1316,12 +1385,20 @@
             </div>
 
             <div class="pdfCard">
-              <div class="pdfCardTitle">آليات الخدمة والإنارة</div>
+              <div class="pdfCardTitle">آليات الخدمة</div>
               <div class="pdfCardBody">
-                <div class="pdfChips">${allChipsHtml}</div>
+                <div class="pdfChips">${svcChips}</div>
                 <div style="margin-top:14px;">
-                  <div style="font-weight:900; color:#0f172a; font-size:14px; margin-bottom:6px;">ملاحظات:</div>
-                  <div class="pdfNotes">${escapeHtml(safeText(d.notes))}</div>
+                  <table class="pdfTable">
+                    ${svcTable}
+                    <tr>
+                      <td class="k" style="width:20%;">تشغيل الإنارة - المدة</td><td class="v" style="width:30%;">${escapeHtml(safeText(d.light_duration))}</td>
+                      <td class="k" style="width:20%;">تشغيل الإنارة - رقم المهبط</td><td class="v" style="width:30%;">${escapeHtml(safeText(d.light_stand))}</td>
+                    </tr>
+                    <tr>
+                      <td class="k">ملاحظات</td><td class="v" colspan="3"><div class="pdfNotes">${escapeHtml(safeText(d.notes))}</div></td>
+                    </tr>
+                  </table>
                 </div>
               </div>
             </div>
@@ -1553,7 +1630,7 @@
           width: { size: 100, type: WidthType.PERCENTAGE },
           borders,
           rows: [
-            rowTitle("الطواقم الموظفين", 6),
+            rowTitle("الطواقم / الموظفين", 6),
             staffHeaderRow,
             ...staffDataRows
           ]
@@ -1579,12 +1656,36 @@
           ]
         });
 
-        const allChipsText = getCombinedChips(d).join(" ، ");
-        const part3Rows = [
-            rowTitle("آليات الخدمة والإنارة", 4),
-            rowWide("الآليات", allChipsText),
-            rowWide("ملاحظات", d.notes || "—")
-        ];
+        const t = (d.aircraft_type || "").trim();
+        const part3Rows = [ rowTitle("آليات الخدمة", 4) ];
+
+        if(t === "فلاي دبي"){
+          part3Rows.push(
+            row2("رافعة", yesNo(d.svc.lift), "سلم القشاط (عدد)", qtyOrDash(d.svc.beltStairs)),
+            row2("سلالم ركاب (عدد)", qtyOrDash(d.svc.paxStairs), "عربات (عدد)", qtyOrDash(d.svc.carts))
+          );
+        }else if(t === "فلاي أديل" || t === "فلاي ناس"){
+          part3Rows.push(
+            row2("سلم القشاط (عدد)", qtyOrDash(d.svc.beltStairs), "سلالم ركاب (عدد)", qtyOrDash(d.svc.paxStairs)),
+            row2("عربات (عدد)", qtyOrDash(d.svc.carts), "—", "—")
+          );
+        }else{
+          part3Rows.push(
+            row2("رافعة", yesNo(d.svc.lift), "كاترينغ", yesNo(d.svc.catering)),
+            row2("إطفائية", yesNo(d.svc.fire), "بوش باك", yesNo(d.svc.pushback)),
+            row2("لودر", yesNo(d.svc.loader), "الضاغط", yesNo(d.svc.compressor)),
+            row2("البطارية", yesNo(d.svc.battery), "خدمة مكيف", yesNo(d.svc.ac)),
+            row2("مياه مالحة", yesNo(d.svc.salt), "مياه حلوة", yesNo(d.svc.fresh)),
+            row2("ساد كوب", yesNo(d.svc.sadcup), "سلم القشاط (عدد)", qtyOrDash(d.svc.beltStairs)),
+            row2("سلالم ركاب (عدد)", qtyOrDash(d.svc.paxStairs), "عربات (عدد)", qtyOrDash(d.svc.carts)),
+            row2("شحن (عدد)", qtyOrDash(d.svc.charge), "جرار (عدد)", qtyOrDash(d.svc.tractor))
+          );
+        }
+
+        part3Rows.push(
+          row2("تشغيل الإنارة - المدة", d.light_duration || "—", "تشغيل الإنارة - رقم المهبط", d.light_stand || "—"),
+          rowWide("ملاحظات", d.notes || "—")
+        );
 
         const part3 = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders, rows: part3Rows });
 
